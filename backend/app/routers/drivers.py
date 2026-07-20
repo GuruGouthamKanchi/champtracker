@@ -70,15 +70,20 @@ def aggregate_driver_profile(
 ) -> DriverProfile:
     """Aggregates and computes career analytics for a target driver"""
     driver_id = driver.driver_id
-    target_id = str(driver_id).strip().lower()
+    
+    target_keys = {
+        str(driver.driver_id).strip().lower(),
+        str(driver.name).strip().lower(),
+        str(driver.name).strip().lower().split()[0] if driver.name else ""
+    } - {""}
     
     # 1. Championships Entered
     regs = regs_repo.get_all()
     matches = matches_repo.get_all()
     
-    entered_champs = set(str(r.championship_id).strip() for r in regs if str(r.driver_id).strip().lower() == target_id)
+    entered_champs = set(str(r.championship_id).strip() for r in regs if str(r.driver_id).strip().lower() in target_keys)
     for m in matches:
-        if str(m.driver_a_id).strip().lower() == target_id or str(m.driver_b_id).strip().lower() == target_id:
+        if str(m.driver_a_id).strip().lower() in target_keys or str(m.driver_b_id).strip().lower() in target_keys:
             if m.championship_id:
                 entered_champs.add(str(m.championship_id).strip())
                 
@@ -86,17 +91,17 @@ def aggregate_driver_profile(
     
     # 2. Championships Won
     podiums = podiums_repo.get_all()
-    championships_won = sum(1 for p in podiums if str(p.gold_driver_id).strip().lower() == target_id)
+    championships_won = sum(1 for p in podiums if str(p.gold_driver_id).strip().lower() in target_keys)
     
     # 3. Matches aggregation
     played_matches = [
         m for m in matches 
         if str(m.status).strip().lower() == "played" 
-        and (str(m.driver_a_id).strip().lower() == target_id or str(m.driver_b_id).strip().lower() == target_id)
+        and (str(m.driver_a_id).strip().lower() in target_keys or str(m.driver_b_id).strip().lower() in target_keys)
     ]
     
     total_matches_played = len(played_matches)
-    total_race_wins = sum(1 for m in played_matches if str(m.winner_id).strip().lower() == target_id)
+    total_race_wins = sum(1 for m in played_matches if str(m.winner_id).strip().lower() in target_keys)
     
     # Win %
     win_percentage = round((total_race_wins / total_matches_played) * 100, 1) if total_matches_played > 0 else 0.0
@@ -117,7 +122,7 @@ def aggregate_driver_profile(
         except ValueError:
             gap_val = 0.0
             
-        if str(m.winner_id).strip().lower() == target_id:
+        if str(m.winner_id).strip().lower() in target_keys:
             signed_gaps.append(gap_val)
             if m.track_id:
                 track_wins[m.track_id] = track_wins.get(m.track_id, 0) + 1
@@ -130,7 +135,7 @@ def aggregate_driver_profile(
             
         # Check lap times
         laps = []
-        if str(m.driver_a_id).strip().lower() == target_id:
+        if str(m.driver_a_id).strip().lower() in target_keys:
             if m.race_fastest_lap_a: laps.append(m.race_fastest_lap_a)
         else:
             if m.race_fastest_lap_b: laps.append(m.race_fastest_lap_b)
@@ -310,8 +315,11 @@ def get_driver_profile(
     tracks_repo: TracksRepository = Depends(get_tracks_repo)
 ):
     """Retrieves computed career profile statistics for a target driver"""
-    drivers = drivers_repo.get_all()
-    driver = next((d for d in drivers if d.driver_id == driver_id), None)
+    search_term = str(driver_id).strip().lower()
+    driver = next(
+        (d for d in drivers if str(d.driver_id).strip().lower() == search_term or str(d.name).strip().lower() == search_term), 
+        None
+    )
     if not driver:
          raise HTTPException(status_code=404, detail=f"Driver '{driver_id}' not found.")
          
