@@ -61,6 +61,40 @@ def parse_time_to_seconds(time_str: str) -> float:
     except Exception:
         return float('inf')
 
+def is_driver_match(driver: Driver, raw_val: str) -> bool:
+    if not raw_val:
+        return False
+    val = str(raw_val).strip().lower()
+    if not val or val in ["none", "null", "undefined"]:
+        return False
+    
+    d_id = str(driver.driver_id).strip().lower()
+    d_name = str(driver.name).strip().lower()
+    d_first = d_name.split()[0] if d_name else ""
+    
+    return (
+        val == d_id or 
+        val == d_name or 
+        (bool(d_first) and val == d_first) or 
+        (bool(d_id) and d_id in val) or 
+        (bool(d_name) and d_name in val) or
+        val in d_id or
+        val in d_name
+    )
+
+def is_match_played(m) -> bool:
+    if not m:
+        return False
+    st = str(getattr(m, "status", "")).strip().lower()
+    if st in ["played", "finished", "completed"]:
+        return True
+    if getattr(m, "race_time_a", None) or getattr(m, "race_time_b", None):
+        return True
+    w_id = str(getattr(m, "winner_id", "")).strip().lower()
+    if w_id and w_id not in ["none", "null", "undefined", ""]:
+        return True
+    return False
+
 def aggregate_driver_profile(
     driver: Driver,
     regs_repo: RegistrationsRepository,
@@ -71,37 +105,30 @@ def aggregate_driver_profile(
     """Aggregates and computes career analytics for a target driver"""
     driver_id = driver.driver_id
     
-    target_keys = {
-        str(driver.driver_id).strip().lower(),
-        str(driver.name).strip().lower(),
-        str(driver.name).strip().lower().split()[0] if driver.name else ""
-    } - {""}
-    
-    # 1. Championships Entered
     regs = regs_repo.get_all()
     matches = matches_repo.get_all()
+    podiums = podiums_repo.get_all()
     
-    entered_champs = set(str(r.championship_id).strip() for r in regs if str(r.driver_id).strip().lower() in target_keys)
+    # 1. Championships Entered
+    entered_champs = set(str(r.championship_id).strip() for r in regs if is_driver_match(driver, r.driver_id))
     for m in matches:
-        if str(m.driver_a_id).strip().lower() in target_keys or str(m.driver_b_id).strip().lower() in target_keys:
+        if is_driver_match(driver, m.driver_a_id) or is_driver_match(driver, m.driver_b_id):
             if m.championship_id:
                 entered_champs.add(str(m.championship_id).strip())
                 
     championships_entered = len(entered_champs)
     
     # 2. Championships Won
-    podiums = podiums_repo.get_all()
-    championships_won = sum(1 for p in podiums if str(p.gold_driver_id).strip().lower() in target_keys)
+    championships_won = sum(1 for p in podiums if is_driver_match(driver, p.gold_driver_id))
     
     # 3. Matches aggregation
     played_matches = [
         m for m in matches 
-        if str(m.status).strip().lower() == "played" 
-        and (str(m.driver_a_id).strip().lower() in target_keys or str(m.driver_b_id).strip().lower() in target_keys)
+        if is_match_played(m) and (is_driver_match(driver, m.driver_a_id) or is_driver_match(driver, m.driver_b_id))
     ]
     
     total_matches_played = len(played_matches)
-    total_race_wins = sum(1 for m in played_matches if str(m.winner_id).strip().lower() in target_keys)
+    total_race_wins = sum(1 for m in played_matches if is_driver_match(driver, m.winner_id))
     
     # Win %
     win_percentage = round((total_race_wins / total_matches_played) * 100, 1) if total_matches_played > 0 else 0.0
@@ -122,7 +149,7 @@ def aggregate_driver_profile(
         except ValueError:
             gap_val = 0.0
             
-        if str(m.winner_id).strip().lower() in target_keys:
+        if is_driver_match(driver, m.winner_id):
             signed_gaps.append(gap_val)
             if m.track_id:
                 track_wins[m.track_id] = track_wins.get(m.track_id, 0) + 1
@@ -135,7 +162,7 @@ def aggregate_driver_profile(
             
         # Check lap times
         laps = []
-        if str(m.driver_a_id).strip().lower() in target_keys:
+        if is_driver_match(driver, m.driver_a_id):
             if m.race_fastest_lap_a: laps.append(m.race_fastest_lap_a)
         else:
             if m.race_fastest_lap_b: laps.append(m.race_fastest_lap_b)
