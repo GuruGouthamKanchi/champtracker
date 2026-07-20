@@ -75,8 +75,12 @@ export default function DriverProfileCard({ driverId, isOpen, onClose, apiUrl, m
   if (!isOpen) return null;
 
   // Compute recent form from matches list
+  const targetId = (driverId || "").toLowerCase().trim();
   const played = matches
-    .filter(m => m.status === "played" && (m.driver_a_id === driverId || m.driver_b_id === driverId))
+    .filter(m => m.status === "played" && (
+      (m.driver_a_id || "").toLowerCase().trim() === targetId || 
+      (m.driver_b_id || "").toLowerCase().trim() === targetId
+    ))
     .sort((a, b) => {
       const dateA = a.played_at ? new Date(a.played_at).getTime() : 0;
       const dateB = b.played_at ? new Date(b.played_at).getTime() : 0;
@@ -229,8 +233,9 @@ export default function DriverProfileCard({ driverId, isOpen, onClose, apiUrl, m
                   <span className="text-[8px] font-race text-[#FBE4E3]/30 italic">No matches played</span>
                 ) : (
                   recentMatches.map((m, idx) => {
-                    const isWin = m.winner_id === driverId;
-                    const isLoss = m.winner_id && m.winner_id !== "None" && m.winner_id !== "" && m.winner_id !== driverId;
+                    const winnerClean = (m.winner_id || "").toLowerCase().trim();
+                    const isWin = winnerClean === targetId;
+                    const isLoss = winnerClean !== "" && !["none", "null"].includes(winnerClean) && winnerClean !== targetId;
                     const label = isWin ? "W" : isLoss ? "L" : "D";
                     const colorClass = isWin 
                       ? "bg-green-500/10 text-green-400 border-green-500/20" 
