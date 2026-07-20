@@ -74,19 +74,61 @@ export default function DriverProfileCard({ driverId, isOpen, onClose, apiUrl, m
 
   if (!isOpen) return null;
 
-  // Compute recent form from matches list
+  // Compute recent form & fallback analytics directly from live matches list
   const targetId = (driverId || "").toLowerCase().trim();
+  const driverName = (profile?.name || "").toLowerCase().trim();
+  const driverFirstName = driverName.split(" ")[0] || "";
+
+  const isDriverInMatch = (m: Match) => {
+    if (m.status !== "played") return false;
+    const a = (m.driver_a_id || "").toLowerCase().trim();
+    const b = (m.driver_b_id || "").toLowerCase().trim();
+    return (
+      a === targetId || b === targetId ||
+      (driverName !== "" && (a === driverName || b === driverName)) ||
+      (driverFirstName !== "" && (a === driverFirstName || b === driverFirstName))
+    );
+  };
+
+  const isDriverWinner = (m: Match) => {
+    if (m.status !== "played" || !m.winner_id) return false;
+    const w = m.winner_id.toLowerCase().trim();
+    return (
+      w === targetId ||
+      (driverName !== "" && w === driverName) ||
+      (driverFirstName !== "" && w === driverFirstName)
+    );
+  };
+
   const played = matches
-    .filter(m => m.status === "played" && (
-      (m.driver_a_id || "").toLowerCase().trim() === targetId || 
-      (m.driver_b_id || "").toLowerCase().trim() === targetId
-    ))
+    .filter(isDriverInMatch)
     .sort((a, b) => {
       const dateA = a.played_at ? new Date(a.played_at).getTime() : 0;
       const dateB = b.played_at ? new Date(b.played_at).getTime() : 0;
       return dateA - dateB;
     });
+
   const recentMatches = played.slice(-5); // last 5 matches
+
+  const fallbackMatchesPlayed = played.length;
+  const fallbackWins = played.filter(isDriverWinner).length;
+  const fallbackWinRate = fallbackMatchesPlayed > 0 ? (fallbackWins / fallbackMatchesPlayed) * 100 : 0;
+
+  const displayMatchesPlayed = (profile?.total_matches_played && profile.total_matches_played > 0)
+    ? profile.total_matches_played
+    : fallbackMatchesPlayed;
+
+  const displayWins = (profile?.total_race_wins && profile.total_race_wins > 0)
+    ? profile.total_race_wins
+    : fallbackWins;
+
+  const displayWinRate = (profile?.win_percentage && profile.win_percentage > 0)
+    ? profile.win_percentage
+    : fallbackWinRate;
+
+  const displayChampionshipsEntered = (profile?.championships_entered && profile.championships_entered > 0)
+    ? profile.championships_entered
+    : (fallbackMatchesPlayed > 0 ? 1 : 0);
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center">
@@ -169,7 +211,7 @@ export default function DriverProfileCard({ driverId, isOpen, onClose, apiUrl, m
                     {profile.championships_won ?? 0}
                   </span>
                   <span className="text-[8px] text-[#FBE4E3]/40 font-race uppercase font-bold">
-                    Won / {profile.championships_entered ?? 0} Entered
+                    Won / {displayChampionshipsEntered} Entered
                   </span>
                 </div>
               </div>
@@ -201,10 +243,10 @@ export default function DriverProfileCard({ driverId, isOpen, onClose, apiUrl, m
                 </div>
                 <div className="mt-1 flex items-baseline gap-1.5">
                   <span className="text-xl font-race font-black text-white">
-                    {profile.total_matches_played ?? 0}
+                    {displayMatchesPlayed}
                   </span>
                   <span className="text-[8px] text-[#FBE4E3]/40 font-race uppercase font-bold">
-                    ({profile.total_race_wins ?? 0} Wins)
+                    ({displayWins} Wins)
                   </span>
                 </div>
               </div>
@@ -217,7 +259,7 @@ export default function DriverProfileCard({ driverId, isOpen, onClose, apiUrl, m
                 </div>
                 <div className="mt-1 flex items-baseline gap-0.5">
                   <span className="text-xl font-race font-black text-white glow-text-crimson">
-                    {typeof profile.win_percentage === "number" ? profile.win_percentage.toFixed(1) : "0.0"}
+                    {displayWinRate.toFixed(1)}
                   </span>
                   <span className="text-[9px] font-bold text-white/80">%</span>
                 </div>
