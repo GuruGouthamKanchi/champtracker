@@ -315,6 +315,7 @@ def get_driver_profile(
     tracks_repo: TracksRepository = Depends(get_tracks_repo)
 ):
     """Retrieves computed career profile statistics for a target driver"""
+    drivers = drivers_repo.get_all()
     search_term = str(driver_id).strip().lower()
     driver = next(
         (d for d in drivers if str(d.driver_id).strip().lower() == search_term or str(d.name).strip().lower() == search_term), 
