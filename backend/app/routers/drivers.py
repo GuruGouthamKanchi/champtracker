@@ -189,8 +189,33 @@ def aggregate_driver_profile(
     )
 
 @router.get("", response_model=List[Driver])
-def get_drivers(repo: DriversRepository = Depends(get_drivers_repo)):
-    return repo.get_all()
+def get_drivers(
+    repo: DriversRepository = Depends(get_drivers_repo),
+    podiums_repo: PodiumsRepository = Depends(get_podiums_repo),
+    matches_repo: MatchesRepository = Depends(get_matches_repo)
+):
+    drivers = repo.get_all()
+    podiums = podiums_repo.get_all()
+    matches = matches_repo.get_all()
+    
+    updated_drivers = []
+    for d in drivers:
+        target_id = str(d.driver_id).strip().lower()
+        champs_won = sum(1 for p in podiums if str(p.gold_driver_id).strip().lower() == target_id)
+        race_wins = sum(
+            1 for m in matches 
+            if str(m.status).strip().lower() == "played" 
+            and str(m.winner_id).strip().lower() == target_id
+        )
+        updated_drivers.append(Driver(
+            driver_id=d.driver_id,
+            name=d.name,
+            avatar_color=d.avatar_color,
+            first_registered=d.first_registered,
+            total_championships_won=max(d.total_championships_won, champs_won),
+            career_race_wins=max(d.career_race_wins, race_wins)
+        ))
+    return updated_drivers
 
 @router.post("", response_model=Driver, status_code=status.HTTP_201_CREATED)
 def create_driver(driver: Driver, repo: DriversRepository = Depends(get_drivers_repo)):
