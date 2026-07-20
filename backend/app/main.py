@@ -12,7 +12,10 @@ from app.routers import (
 app = FastAPI(
     title="MonoPosto Esports Championship Tracker API",
     description="Refactored Clean Architecture F1-style backend with Repository & Cache layers",
-    version="2.0.0"
+    version="2.0.0",
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json"
 )
 
 # Set up CORS
