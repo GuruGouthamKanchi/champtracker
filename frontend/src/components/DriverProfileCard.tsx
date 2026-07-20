@@ -166,10 +166,10 @@ export default function DriverProfileCard({ driverId, isOpen, onClose, apiUrl, m
                 </div>
                 <div className="mt-1 flex items-baseline gap-1.5">
                   <span className="text-xl font-race font-black text-white glow-text-crimson">
-                    <CountUp value={profile.championships_won} />
+                    {profile.championships_won ?? 0}
                   </span>
                   <span className="text-[8px] text-[#FBE4E3]/40 font-race uppercase font-bold">
-                    Won / <CountUp value={profile.championships_entered} /> Entered
+                    Won / {profile.championships_entered ?? 0} Entered
                   </span>
                 </div>
               </div>
@@ -201,10 +201,10 @@ export default function DriverProfileCard({ driverId, isOpen, onClose, apiUrl, m
                 </div>
                 <div className="mt-1 flex items-baseline gap-1.5">
                   <span className="text-xl font-race font-black text-white">
-                    <CountUp value={profile.total_matches_played} />
+                    {profile.total_matches_played ?? 0}
                   </span>
                   <span className="text-[8px] text-[#FBE4E3]/40 font-race uppercase font-bold">
-                    (<CountUp value={profile.total_race_wins} /> Wins)
+                    ({profile.total_race_wins ?? 0} Wins)
                   </span>
                 </div>
               </div>
@@ -217,7 +217,7 @@ export default function DriverProfileCard({ driverId, isOpen, onClose, apiUrl, m
                 </div>
                 <div className="mt-1 flex items-baseline gap-0.5">
                   <span className="text-xl font-race font-black text-white glow-text-crimson">
-                    <CountUp value={profile.win_percentage} decimals={1} />
+                    {typeof profile.win_percentage === "number" ? profile.win_percentage.toFixed(1) : "0.0"}
                   </span>
                   <span className="text-[9px] font-bold text-white/80">%</span>
                 </div>
