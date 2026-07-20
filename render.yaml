@@ -16,3 +16,19 @@ services:
         value: "0.0.0.0"
       - key: PORT
         value: "8000"
+      - key: GOOGLE_CREDENTIALS_FILE
+        value: "/etc/secrets/google-credentials.json"
+      - key: DRIVERS_SPREADSHEET_ID
+        value: "1S806maoea7z0bVQ70Mc6bMF1DiBnDSIKOFsN6tXwuPg"
+      - key: CHAMPIONSHIPS_SPREADSHEET_ID
+        value: "1bARNtRjMyG9tDT8O09YpkNzrCK8TztONixO_Bnal1Gk"
+      - key: REGISTRATIONS_SPREADSHEET_ID
+        value: "1GIaYIxmAqKlZI6r98hMOih7i8ihdNiMFfMIbwblKybI"
+      - key: GROUPS_SPREADSHEET_ID
+        value: "1dvTpfjKw2rLTKlHw0KXHoBgk0EMkr6goMX805kgPXuY"
+      - key: MATCHES_SPREADSHEET_ID
+        value: "19yc1eQuJb_IwYMFzlF0t-6aT_kwcd4OuMCMx1oY_izA"
+      - key: STANDINGS_SPREADSHEET_ID
+        value: "1wcRWdyqNahxJ6t7zV-g3rM8Ldjvqap66LDYDEW_FGmw"
+      - key: PODIUMS_SPREADSHEET_ID
+        value: "1Sb7Zs-vBkPfgqA0fKadpqQ7rNs0IZNgO7Ma-zQiEDWI"
