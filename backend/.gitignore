@@ -1,0 +1,15 @@
+# Environments and secrets
+.env
+secrets/
+*.json.key
+
+# Local database cache
+data/*.json
+
+# Python cache files
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+env/
+venv/

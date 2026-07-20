@@ -1,0 +1,22 @@
+name: Keep Backend Alive ⚡
+
+on:
+  schedule:
+    # Run every 10 minutes (cron format: minute hour day month day-of-week)
+    - cron: '*/10 * * * *'
+  workflow_dispatch: # Allows manual trigger from GitHub UI
+
+jobs:
+  ping-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping API Health Endpoint
+        run: |
+          BACKEND_URL="${{ secrets.BACKEND_URL }}"
+          if [ -z "$BACKEND_URL" ]; then
+            echo "BACKEND_URL secret is not set. Please set BACKEND_URL in GitHub repository Secrets."
+            echo "Example: https://your-backend.onrender.com/api/health"
+            exit 0
+          fi
+          echo "Pinging $BACKEND_URL to prevent cold start..."
+          curl -s -f "$BACKEND_URL" || echo "Ping failed or server waking up!"

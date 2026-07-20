@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bordeaux-dark: #2C0509;
+  --color-bordeaux-base: #3F0D12;
+  --color-ruby-red: #98111E;
+  --color-crimson: #D72638;
+  --color-blush: #FBE4E3;
+  
+  --font-race: var(--font-orbitron);
+  --font-sans: var(--font-inter);
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: var(--font-inter), sans-serif;
+  background-color: var(--color-bordeaux-dark);
+  color: var(--color-blush);
+}
+
+/* Custom scrollbars for a premium gaming look */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: #2C0509;
+}
+::-webkit-scrollbar-thumb {
+  background: #98111E;
+  border-radius: 2px;
+}
+
+/* Glowing text and panel helper classes */
+.glow-text-crimson {
+  text-shadow: 0 0 8px rgba(215, 38, 56, 0.6);
+}
+.glow-text-ruby {
+  text-shadow: 0 0 8px rgba(152, 17, 30, 0.8);
+}
+.glow-border-crimson {
+  box-shadow: 0 0 10px rgba(215, 38, 56, 0.25);
+  border-color: rgba(215, 38, 56, 0.4);
+}
+.glass-panel {
+  background: rgba(63, 13, 18, 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(251, 228, 227, 0.08);
+}
+.glass-panel-active {
+  background: rgba(152, 17, 30, 0.15);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(215, 38, 56, 0.3);
+}
